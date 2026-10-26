@@ -12,14 +12,15 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const defaultFile = fileURLToPath(new URL("./articles.json", import.meta.url));
+const seedFile = fileURLToPath(new URL("./articles.seed.json", import.meta.url));
 const storageFile = process.env.ARTICLE_STORE_FILE
   ? resolve(process.env.ARTICLE_STORE_FILE)
   : defaultFile;
 
-// 테스트는 별도 파일을 사용하여 실제 게시글을 변경하지 않습니다.
-if (storageFile !== defaultFile && !existsSync(storageFile)) {
+// 저장 파일이 없을 때만 초기 샘플을 복사합니다. 기존 데이터는 유지합니다.
+if (!existsSync(storageFile)) {
   mkdirSync(dirname(storageFile), { recursive: true });
-  copyFileSync(defaultFile, storageFile);
+  copyFileSync(seedFile, storageFile);
 }
 
 const articles = JSON.parse(readFileSync(storageFile, "utf8"));

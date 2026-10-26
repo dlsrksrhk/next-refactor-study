@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { copyFile, mkdtemp, readFile, rename, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rename, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
@@ -10,9 +10,6 @@ import { once } from "node:events";
 async function withBackend(settings, run) {
   const directory = await mkdtemp(join(tmpdir(), "article-backend-test-"));
   const storageFile = settings.ARTICLE_STORE_FILE ?? join(directory, "articles.json");
-  if (!settings.ARTICLE_STORE_FILE) {
-    await copyFile(new URL("./articles.json", import.meta.url), storageFile);
-  }
   const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], {
     env: { ...process.env, PORT: "0", SAVE_DELAY_MS: "0", SAVE_STATUS: "204", ARTICLE_STORE_FILE: storageFile, ...settings },
     stdio: ["ignore", "pipe", "pipe"],
@@ -79,7 +76,6 @@ test("요청 분리 후에도 메서드·본문·작성자 오류 응답을 유�
 test("저장 내용이 JSON 파일과 서버 재시작 후에도 유지된다", { timeout: 10_000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "article-persistence-test-"));
   const storageFile = join(directory, "articles.json");
-  await copyFile(new URL("./articles.json", import.meta.url), storageFile);
   const draft = { title: "재시작 후에도 남을 제목", body: "영구 저장한 본문" };
 
   try {
@@ -116,5 +112,15 @@ test("파일 저장 실패는 500을 반환하고 메모리 데이터도 유지�
     assert.equal(response.status, 500);
     assert.deepEqual(await (await fetch(url)).json(), original);
     assert.deepEqual(JSON.parse(await readFile(`${storageFile}.backup`, "utf8")).find((article) => article.id === "101"), original);
+  });
+});
+
+test("저장 파일이 없으면 로컬 수정 데이터 대신 초기 샘플로 생성한다", { timeout: 10_000 }, async () => {
+  await withBackend({}, async (baseUrl, storageFile) => {
+    const response = await fetch(`${baseUrl}/api/articles/101`);
+    const article = await response.json();
+    assert.equal(article.title, "11월 사내 기술 공유회 안내");
+    const seed = JSON.parse(await readFile(new URL("./articles.seed.json", import.meta.url), "utf8"));
+    assert.deepEqual(JSON.parse(await readFile(storageFile, "utf8")), seed);
   });
 });
