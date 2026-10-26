@@ -13,3 +13,4 @@ Thumbs.db
 next-env.d.ts
 *.log
 backend/*.tmp
+/backend/articles.json
