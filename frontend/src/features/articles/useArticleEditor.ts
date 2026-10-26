@@ -22,11 +22,16 @@ export function useArticleEditor(
     }
     setIsSaving(true);
     try {
-      await fetch(`/api/articles/${articleId}`, {
+      const response = await fetch(`/api/articles/${articleId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, body }),
       });
+
+      if (!response.ok) {
+        throw new Error("저장하지 못했습니다.");
+      }
+
       if (!silent) alert("저장했습니다.");
       if (redirectAfterSave) router.push(`/articles/${articleId}`);
     } catch {
