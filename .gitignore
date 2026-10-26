@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.next-test/
+.data/
+.data-test/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.env*
+.idea/
+.DS_Store
+Thumbs.db
+next-env.d.ts
+*.log
+backend/*.tmp
