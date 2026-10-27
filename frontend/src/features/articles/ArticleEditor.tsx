@@ -1,17 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import type { Article } from "./article";
 import { useArticleEditor } from "./useArticleEditor";
+import { toast } from "sonner";
 
 export function ArticleEditor({ article }: { article: Article }) {
   const [stayAfterSave, setStayAfterSave] = useState(false);
-  const editor = useArticleEditor(article.id, article.title, article.body, !stayAfterSave, false);
+  const editor = useArticleEditor(article.id, article.title, article.body, !stayAfterSave);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await editor.save();
+    toast.dismiss();
+
+    const saveResult = await editor.save();
+    if (saveResult.isSuccess) {
+      toast.success("저장했습니다.", { toasterId: "root" });
+      return;
+    }
+
+    toast.error(saveResult.message, { toasterId: "root" });
   }
 
   return (

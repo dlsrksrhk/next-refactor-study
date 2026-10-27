@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentUser } from "@/features/articles/getArticle";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "사내 전체 게시판 | 한빛 그룹웨어",
@@ -35,7 +36,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               </Link>
             </nav>
           </aside>
-          <main>{children}</main>
+          <main>
+            {children}
+            <Toaster
+              id="root"
+              position="top-center"
+              richColors
+            />
+          </main>
         </div>
       </body>
     </html>
