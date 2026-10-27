@@ -23,7 +23,7 @@ export function PopupEditor({ article, onClose, onSaved }: Props) {
     };
   }, []);
 
-  const editor = useArticleEditor(article.id, article.title, article.body, false);
+  const editor = useArticleEditor(article.id, article.title, article.body);
 
   async function handleSaveAndClose(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

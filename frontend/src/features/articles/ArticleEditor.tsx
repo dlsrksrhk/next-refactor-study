@@ -5,10 +5,12 @@ import { type FormEvent, useState } from "react";
 import type { Article } from "./article";
 import { useArticleEditor } from "./useArticleEditor";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function ArticleEditor({ article }: { article: Article }) {
+  const router = useRouter();
   const [stayAfterSave, setStayAfterSave] = useState(false);
-  const editor = useArticleEditor(article.id, article.title, article.body, !stayAfterSave);
+  const editor = useArticleEditor(article.id, article.title, article.body);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -17,6 +19,10 @@ export function ArticleEditor({ article }: { article: Article }) {
     const saveResult = await editor.save();
     if (saveResult.isSuccess) {
       toast.success("저장했습니다.", { toasterId: "root" });
+
+      if (!stayAfterSave) {
+        router.push(`/board/articles/${article.id}`);
+      }
       return;
     }
 
