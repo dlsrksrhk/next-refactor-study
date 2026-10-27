@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 type SaveResult =
   | {
@@ -12,13 +11,7 @@ type SaveResult =
       message: string;
     };
 
-export function useArticleEditor(
-  articleId: string,
-  initialTitle: string,
-  initialBody: string,
-  redirectAfterSave = true,
-) {
-  const router = useRouter();
+export function useArticleEditor(articleId: string, initialTitle: string, initialBody: string) {
   const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState(initialBody);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,8 +35,6 @@ export function useArticleEditor(
       if (!response.ok) {
         throw new Error();
       }
-
-      if (redirectAfterSave) router.push(`/articles/${articleId}`);
 
       return {
         isSuccess: true,
