@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { updateArticle } from "@/features/articles/article-api";
 
 type SaveResult =
   | {
@@ -26,15 +27,7 @@ export function useArticleEditor(articleId: string, initialTitle: string, initia
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body }),
-      });
-
-      if (!response.ok) {
-        throw new Error();
-      }
+      await updateArticle(articleId, { title, body });
 
       return {
         isSuccess: true,
