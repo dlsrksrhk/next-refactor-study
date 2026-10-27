@@ -3,23 +3,34 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type SaveResult =
+  | {
+      isSuccess: true;
+    }
+  | {
+      isSuccess: false;
+      message: string;
+    };
+
 export function useArticleEditor(
   articleId: string,
   initialTitle: string,
   initialBody: string,
   redirectAfterSave = true,
-  silent = false,
 ) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [body, setBody] = useState(initialBody);
   const [isSaving, setIsSaving] = useState(false);
 
-  async function save() {
+  async function save(): Promise<SaveResult> {
     if (!title.trim()) {
-      alert("제목을 입력해 주세요.");
-      return;
+      return {
+        isSuccess: false,
+        message: "제목을 입력해 주세요.",
+      };
     }
+
     setIsSaving(true);
     try {
       const response = await fetch(`/api/articles/${articleId}`, {
@@ -29,13 +40,19 @@ export function useArticleEditor(
       });
 
       if (!response.ok) {
-        throw new Error("저장하지 못했습니다.");
+        throw new Error();
       }
 
-      if (!silent) alert("저장했습니다.");
       if (redirectAfterSave) router.push(`/articles/${articleId}`);
+
+      return {
+        isSuccess: true,
+      };
     } catch {
-      if (!silent) alert("저장하지 못했습니다.");
+      return {
+        isSuccess: false,
+        message: "저장하지 못했습니다.",
+      };
     } finally {
       setIsSaving(false);
     }

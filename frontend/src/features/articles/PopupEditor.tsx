@@ -1,8 +1,9 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { FormEvent, useRef, useEffect } from "react";
 import type { Article } from "./article";
 import { useArticleEditor } from "./useArticleEditor";
+import { toast, Toaster } from "sonner";
 
 function showDialog(dialog: HTMLDialogElement | null) {
   if (dialog && !dialog.open) dialog.showModal();
@@ -11,13 +12,35 @@ function showDialog(dialog: HTMLDialogElement | null) {
 type Props = { article: Article; onClose: () => void; onSaved: () => void };
 
 export function PopupEditor({ article, onClose, onSaved }: Props) {
-  const editor = useArticleEditor(article.id, article.title, article.body, false, true);
+  const isActiveRef = useRef(true);
+
+  useEffect(() => {
+    isActiveRef.current = true;
+
+    return () => {
+      isActiveRef.current = false;
+      toast.dismiss("popup");
+    };
+  }, []);
+
+  const editor = useArticleEditor(article.id, article.title, article.body, false);
 
   async function handleSaveAndClose(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await editor.save();
-    onClose();
-    onSaved();
+
+    const saveResult = await editor.save();
+
+    if (!isActiveRef.current) {
+      return;
+    }
+
+    if (saveResult.isSuccess) {
+      onClose();
+      onSaved();
+      return;
+    }
+
+    toast.error(saveResult.message, { id: "popup", toasterId: "popup" });
   }
 
   return (
@@ -31,6 +54,11 @@ export function PopupEditor({ article, onClose, onSaved }: Props) {
         onSubmit={handleSaveAndClose}
         aria-busy={editor.isSaving}
       >
+        <Toaster
+          id="popup"
+          position="top-center"
+          richColors
+        />
         <fieldset disabled={editor.isSaving}>
           <legend className="visually-hidden">게시글 내용</legend>
           <label htmlFor="quick-title">제목</label>
