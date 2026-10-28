@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateArticle } from "@/features/articles/article-api";
+import type { ArticleDraft } from "@/features/articles/article";
 
 type SaveResult =
   | {
@@ -12,22 +13,13 @@ type SaveResult =
       message: string;
     };
 
-export function useArticleEditor(articleId: string, initialTitle: string, initialBody: string) {
-  const [title, setTitle] = useState(initialTitle);
-  const [body, setBody] = useState(initialBody);
+export function useSaveArticle() {
   const [isSaving, setIsSaving] = useState(false);
 
-  async function save(): Promise<SaveResult> {
-    if (!title.trim()) {
-      return {
-        isSuccess: false,
-        message: "제목을 입력해 주세요.",
-      };
-    }
-
+  async function save(articleId: string, articleDraft: ArticleDraft): Promise<SaveResult> {
     setIsSaving(true);
     try {
-      await updateArticle(articleId, { title, body });
+      await updateArticle(articleId, articleDraft);
 
       return {
         isSuccess: true,
@@ -42,5 +34,5 @@ export function useArticleEditor(articleId: string, initialTitle: string, initia
     }
   }
 
-  return { title, setTitle, body, setBody, isSaving, save };
+  return { isSaving, save };
 }

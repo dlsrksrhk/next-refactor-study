@@ -3,20 +3,27 @@
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import type { Article } from "./article";
-import { useArticleEditor } from "./useArticleEditor";
+import { useSaveArticle } from "./useSaveArticle";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export function ArticleEditor({ article }: { article: Article }) {
   const router = useRouter();
+  const [title, setTitle] = useState(article.title);
+  const [body, setBody] = useState(article.body);
   const [stayAfterSave, setStayAfterSave] = useState(false);
-  const editor = useArticleEditor(article.id, article.title, article.body);
+  const editor = useSaveArticle();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     toast.dismiss();
 
-    const saveResult = await editor.save();
+    if (!title.trim()) {
+      toast.error("제목을 입력해 주세요.", { toasterId: "root" });
+      return;
+    }
+
+    const saveResult = await editor.save(article.id, { title, body });
     if (saveResult.isSuccess) {
       toast.success("저장했습니다.", { toasterId: "root" });
 
@@ -39,15 +46,15 @@ export function ArticleEditor({ article }: { article: Article }) {
         <label htmlFor="title">제목</label>
         <input
           id="title"
-          value={editor.title}
-          onChange={(event) => editor.setTitle(event.target.value)}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
         />
         <label htmlFor="body">본문</label>
         <textarea
           id="body"
           rows={10}
-          value={editor.body}
-          onChange={(event) => editor.setBody(event.target.value)}
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
         />
         <label className="checkbox-label">
           <input
