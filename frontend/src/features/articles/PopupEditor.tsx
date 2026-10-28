@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useRef, useEffect } from "react";
+import { FormEvent, useRef, useEffect, useState } from "react";
 import type { Article } from "./article";
-import { useArticleEditor } from "./useArticleEditor";
+import { useSaveArticle } from "./useSaveArticle";
 import { toast, Toaster } from "sonner";
 
 function showDialog(dialog: HTMLDialogElement | null) {
@@ -12,6 +12,8 @@ function showDialog(dialog: HTMLDialogElement | null) {
 type Props = { article: Article; onClose: () => void; onSaved: () => void };
 
 export function PopupEditor({ article, onClose, onSaved }: Props) {
+  const [title, setTitle] = useState(article.title);
+  const [body, setBody] = useState(article.body);
   const isActiveRef = useRef(true);
 
   useEffect(() => {
@@ -23,12 +25,17 @@ export function PopupEditor({ article, onClose, onSaved }: Props) {
     };
   }, []);
 
-  const editor = useArticleEditor(article.id, article.title, article.body);
+  const editor = useSaveArticle();
 
   async function handleSaveAndClose(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const saveResult = await editor.save();
+    if (!title.trim()) {
+      toast.error("제목을 입력해 주세요.", { id: "popup", toasterId: "popup" });
+      return;
+    }
+
+    const saveResult = await editor.save(article.id, { title, body });
 
     if (!isActiveRef.current) {
       return;
@@ -64,15 +71,15 @@ export function PopupEditor({ article, onClose, onSaved }: Props) {
           <label htmlFor="quick-title">제목</label>
           <input
             id="quick-title"
-            value={editor.title}
-            onChange={(event) => editor.setTitle(event.target.value)}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
           />
           <label htmlFor="quick-body">본문</label>
           <textarea
             id="quick-body"
             rows={6}
-            value={editor.body}
-            onChange={(event) => editor.setBody(event.target.value)}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
           />
           <div className="actions">
             <button
