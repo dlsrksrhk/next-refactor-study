@@ -24,7 +24,7 @@ export function ArticleEditor({ article }: { article: Article }) {
     }
 
     const saveResult = await editor.save(article.id, { title, body });
-    if (saveResult.isSuccess) {
+    if (saveResult.status === "success") {
       toast.success("저장했습니다.", { toasterId: "root" });
 
       if (!stayAfterSave) {
@@ -33,7 +33,9 @@ export function ArticleEditor({ article }: { article: Article }) {
       return;
     }
 
-    toast.error(saveResult.message, { toasterId: "root" });
+    if (saveResult.status === "error") {
+      toast.error(saveResult.message, { toasterId: "root" });
+    }
   }
 
   return (

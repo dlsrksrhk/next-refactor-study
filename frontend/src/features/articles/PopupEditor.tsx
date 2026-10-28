@@ -41,13 +41,15 @@ export function PopupEditor({ article, onClose, onSaved }: Props) {
       return;
     }
 
-    if (saveResult.isSuccess) {
+    if (saveResult.status === "success") {
       onClose();
       onSaved();
       return;
     }
 
-    toast.error(saveResult.message, { id: "popup", toasterId: "popup" });
+    if (saveResult.status === "error") {
+      toast.error(saveResult.message, { id: "popup", toasterId: "popup" });
+    }
   }
 
   return (
