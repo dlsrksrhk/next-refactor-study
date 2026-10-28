@@ -42,14 +42,14 @@ frontend/src/
     board/page.tsx                         # 게시글 목록
     board/articles/[id]/page.tsx           # 게시글 상세
     board/articles/[id]/edit/page.tsx      # 조회·작성자 확인 → 편집기에 전달
-    articles/[id]/page.tsx                 # 기존 훅의 이동 주소를 새 상세 주소로 연결
   features/articles/
     article.ts                            # 게시글·사용자 타입
     getArticle.ts                         # 백엔드에서 게시글·목록·사용자 조회
     ArticleEditor.tsx                     # 전체 편집 + 계속 편집 체크박스
     QuickEditButton.tsx                   # 목록에서 팝업 열기 + 목록 갱신
     PopupEditor.tsx                       # 빠른 수정 폼
-    useArticleEditor.ts                   # 기존 편집 훅 (리팩터링 전)
+    article-api.ts                        # HTTP 수정 요청과 응답 상태 검사
+    useSaveArticle.ts                     # 저장 실행·진행 상태·중복 호출 방지
     formatDate.ts                         # 한국 시간 기준 수정일 표시
 backend/
   articles.seed.json                      # Git으로 관리하는 초기 샘플
@@ -102,11 +102,13 @@ npm run dev:backend
 
 정상 동작으로 돌아갈 때는 서버를 종료하고 `SAVE_DELAY_MS`를 `0`, `SAVE_STATUS`를 `204`로 설정한 뒤 다시 시작하세요. 네트워크 실패는 브라우저 개발자 도구의 Network Offline으로 재현할 수 있습니다.
 
-## 현재 시작 코드의 범위
+## 현재 저장 구조
 
-`useArticleEditor()`는 기존 코드 그대로 유지했습니다. 훅의 고정 이동 주소 `/articles/:id`는 연결 페이지를 거쳐 `/board/articles/:id`로 이동합니다.
+입력 상태·제목 검증·토스트·화면 이동과 팝업 닫기는 각 편집 화면이 담당합니다. `article-api.ts`는 React에 의존하지 않고 PUT 요청과 응답 상태 검사만 수행합니다.
 
-HTTP 오류를 성공으로 처리하는 문제와 저장 결과를 반환하지 않는 문제도 남아 있습니다. 따라서 빠른 수정에서 실패 또는 제목 검증 실패 후에도 팝업이 닫히는 동작이 있습니다. 이를 미리 해결하지 않고 대화로 리팩터링을 진행합니다. 정상 저장 흐름을 확인하는 테스트가 통과해도 훅 리팩터링이 완료된 것은 아닙니다.
+`useSaveArticle()`은 입력값을 받아 저장하고 `success`, `error`, `already-saving`을 반환합니다. state는 화면의 저장 중 표시, ref는 같은 훅 인스턴스의 즉시 중복 호출 차단에 사용합니다. 이미 저장 중인 호출은 추가 요청이나 토스트 없이 무시합니다. 성공·실패 후에는 잠금을 해제해 재시도할 수 있습니다.
+
+전체 편집은 성공 후 상세로 이동하거나 계속 편집할 수 있습니다. 팝업은 성공 시에만 닫히며 실패하면 입력을 유지합니다. 저장 중 Esc로 팝업을 닫을 수 있고, 닫힌 팝업의 늦은 응답은 새 팝업의 안내나 닫기에 영향을 주지 않습니다. 팝업 닫기가 서버에 이미 전달된 저장의 취소를 보장하지는 않습니다.
 
 ## 확인 명령
 
@@ -117,7 +119,9 @@ npx playwright install chromium
 npm test
 ```
 
-테스트는 별도 목업 백엔드(4100)와 프론트엔드(3100)를 실행하고 종료합니다. 브라우저 테스트는 `backend/.data-test/articles.json`, 백엔드 테스트는 임시 폴더의 JSON을 사용하므로 실제 `backend/articles.json`은 변경하지 않습니다. 테스트용 저장 파일도 없으면 `articles.seed.json`에서 생성합니다. 일반 저장·계속 편집·목록 위 빠른 수정·작성자 권한과 함께 최초 샘플 복사, 새로고침 및 서버 재시작 후 데이터 유지, 파일 기록 실패도 확인합니다.
+테스트는 별도 목업 백엔드(4100)와 프론트엔드(3100)를 실행하고 종료합니다. 브라우저 테스트는 `backend/.data-test/articles.json`, 백엔드 테스트는 임시 폴더의 JSON을 사용하므로 실제 `backend/articles.json`은 변경하지 않습니다. 테스트용 저장 파일도 없으면 `articles.seed.json`에서 생성합니다.
+
+브라우저 테스트는 정상 저장·계속 편집·빠른 수정·작성자 권한과 함께 공백 제목 검증, 즉시 중복 호출 시 단일 요청, 저장 중 입력 잠금, 500·네트워크 실패 후 재시도, 닫힌 팝업의 늦은 응답 무시를 확인합니다. 백엔드 테스트는 최초 샘플 복사, 서버 재시작 후 데이터 유지와 파일 기록 실패를 확인합니다.
 
 ## 프론트엔드 코드 스타일
 

@@ -50,6 +50,7 @@ test("전체 편집은 기본적으로 저장 후 게시판 상세로 이동한�
   page.on("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect(page).toHaveURL(/\/board\/articles\/101$/);
+  await expect(page.getByText("저장했습니다.", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "기술 공유회 장소 변경" })).toBeVisible();
   await expect(page.getByRole("article")).toContainText("소회의실");
   await page.reload();
