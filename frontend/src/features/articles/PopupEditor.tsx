@@ -17,11 +17,8 @@ export function PopupEditor({ articleId, onClose, onSaved }: Props) {
   const [article, setArticle] = useState<Article | null>(null);
   const [error, setError] = useState("");
 
-  // 2주차 시작 코드: 조회 조건과 입력 초기화는 실습에서 수정합니다.
-  const request = { articleId };
-
   useEffect(() => {
-    getArticle(request.articleId)
+    getArticle(articleId)
       .then((data) => {
         setArticle(data);
         setError("");
@@ -29,7 +26,7 @@ export function PopupEditor({ articleId, onClose, onSaved }: Props) {
       .catch(() => {
         setError("게시글을 불러오지 못했습니다.");
       });
-  }, [request]);
+  }, [articleId]);
 
   return (
     <dialog

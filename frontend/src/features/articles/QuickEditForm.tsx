@@ -14,11 +14,6 @@ type Props = { article: Article; onClose: () => void; onSaved: () => void };
 export function QuickEditForm({ article, onClose, onSaved }: Props) {
   const [title, setTitle] = useState(article.title);
   const [body, setBody] = useState(article.body);
-  // 2주차 시작 코드: 서버 응답이 올 때마다 입력을 동기화합니다.
-  useEffect(() => {
-    setTitle(article.title);
-    setBody(article.body);
-  }, [article]);
 
   const isActiveRef = useRef(true);
 
