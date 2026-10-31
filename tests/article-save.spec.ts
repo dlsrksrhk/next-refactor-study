@@ -13,7 +13,7 @@ async function openEditor(page: Page, kind: EditorKind) {
     await page.getByLabel("저장 후 이 화면에서 계속 편집").check();
   } else {
     await page.goto("/board");
-    await page.getByRole("button", { name: "빠른 수정", exact: true }).click();
+    await page.getByRole("button", { name: "빠른 수정", exact: true }).first().click();
   }
 }
 
@@ -38,6 +38,7 @@ for (const kind of ["full", "popup"] as const) {
     });
 
     await page.route("**/api/articles/101", async (route) => {
+      if (route.request().method() !== "PUT") return route.continue();
       requests++;
       if (requests === 1) {
         await firstRequestGate;
@@ -51,8 +52,6 @@ for (const kind of ["full", "popup"] as const) {
       await openEditor(page, kind);
       await page.getByLabel("제목", { exact: true }).fill(`${kind} 저장 검증 제목`);
       await page.getByLabel("본문", { exact: true }).fill("실패 후에도 유지할 본문");
-      await page.waitForLoadState("networkidle");
-
       // 버튼 비활성화와 무관하게 같은 렌더의 저장 함수를 즉시 두 번 실행합니다.
       const firstRequest = page.waitForRequest((item) => item.method() === "PUT");
       await page.evaluate(() => {
@@ -113,7 +112,7 @@ for (const kind of ["full", "popup"] as const) {
 test("네트워크 실패도 팝업과 입력을 유지하고 다시 저장할 수 있다", async ({ page }) => {
   await openEditor(page, "popup");
   await page.getByLabel("제목", { exact: true }).fill("네트워크 실패 후 재시도");
-  await page.route("**/api/articles/101", (route) => route.abort("failed"));
+  await page.route("**/api/articles/101", (route) => route.request().method() === "PUT" ? route.abort("failed") : route.continue());
   await saveButton(page, "popup").click();
   await expect(page.getByText("저장하지 못했습니다.", { exact: true })).toBeVisible();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -131,6 +130,7 @@ test("닫힌 팝업의 늦은 실패 응답은 새 팝업에 안내를 표시하
     releaseRequest = resolve;
   });
   await page.route("**/api/articles/101", async (route) => {
+    if (route.request().method() !== "PUT") return route.continue();
     await gate;
     await route.fulfill({ status: 500, body: "" });
   });
@@ -143,7 +143,7 @@ test("닫힌 팝업의 늦은 실패 응답은 새 팝업에 안내를 표시하
     await expect(page.getByRole("button", { name: "저장 중…" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await page.getByRole("button", { name: "빠른 수정", exact: true }).click();
+    await page.getByRole("button", { name: "빠른 수정", exact: true }).first().click();
     await page.getByLabel("제목", { exact: true }).fill("새 팝업에서 작성 중");
     const response = page.waitForResponse((item) => item.request().method() === "PUT");
     releaseRequest();

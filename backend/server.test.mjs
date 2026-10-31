@@ -11,7 +11,7 @@ async function withBackend(settings, run) {
   const directory = await mkdtemp(join(tmpdir(), "article-backend-test-"));
   const storageFile = settings.ARTICLE_STORE_FILE ?? join(directory, "articles.json");
   const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], {
-    env: { ...process.env, PORT: "0", SAVE_DELAY_MS: "0", SAVE_STATUS: "204", ARTICLE_STORE_FILE: storageFile, ...settings },
+    env: { ...process.env, PORT: "0", READ_DELAY_MS: "0", SAVE_DELAY_MS: "0", SAVE_STATUS: "204", ARTICLE_STORE_FILE: storageFile, ...settings },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -68,7 +68,7 @@ test("요청 분리 후에도 메서드·본문·작성자 오류 응답을 유�
     assert.deepEqual(await malformed.json(), { message: "올바른 JSON을 보내 주세요." });
     assert.equal((await fetch(url, { method: "PUT", body: "x".repeat(65537) })).status, 413);
     assert.equal((await fetch(url, { method: "PUT", body: JSON.stringify({ title: " ", body: "본문" }) })).status, 400);
-    assert.equal((await fetch(`${baseUrl}/api/articles/102`, { method: "PUT", body: "{invalid" })).status, 403);
+    assert.equal((await fetch(`${baseUrl}/api/articles/103`, { method: "PUT", body: "{invalid" })).status, 403);
     assert.deepEqual(await (await fetch(url)).json(), original);
   });
 });

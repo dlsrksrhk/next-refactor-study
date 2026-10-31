@@ -19,7 +19,7 @@ export function QuickEditButton({ article }: { article: Article }) {
       </button>
       {isOpen && (
         <PopupEditor
-          article={article}
+          articleId={article.id}
           onClose={() => setIsOpen(false)}
           onSaved={() => router.refresh()}
         />

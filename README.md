@@ -47,8 +47,9 @@ frontend/src/
     getArticle.ts                         # 백엔드에서 게시글·목록·사용자 조회
     ArticleEditor.tsx                     # 전체 편집 + 계속 편집 체크박스
     QuickEditButton.tsx                   # 목록에서 팝업 열기 + 목록 갱신
-    PopupEditor.tsx                       # 빠른 수정 폼
-    article-api.ts                        # HTTP 수정 요청과 응답 상태 검사
+    PopupEditor.tsx                       # 빠른 수정 팝업과 상세 조회 (2주차 시작 코드)
+    QuickEditForm.tsx                     # 빠른 수정 입력과 저장 (2주차 시작 코드)
+    article-api.ts                        # 브라우저 상세 조회·수정 요청과 응답 상태 검사
     useSaveArticle.ts                     # 저장 실행·진행 상태·중복 호출 방지
     formatDate.ts                         # 한국 시간 기준 수정일 표시
 backend/
@@ -64,6 +65,34 @@ backend/
 초기 데이터 조회는 Server Component가 HTTP로 수행하고, 입력·저장은 Client Component에서 처리합니다. 브라우저의 `/api` 요청은 Next.js 설정을 통해 백엔드로 전달됩니다. 서버 데이터는 별도로 캐시하지 않습니다.
 
 ## 목업 API
+
+### 2주차 실습 시작 상태
+
+현재 빠른 수정에는 **의도적으로 반복 조회와 입력값 덮어쓰기 문제가 있습니다.**
+저장 훅은 1주차 구현을 유지하며, 조회 Effect와 폼 초기화를 직접 리팩터링하는 실습입니다.
+
+1. 두 서버를 실행하고 `/board`에서 `101`의 빠른 수정을 엽니다.
+2. 개발자 도구 Network에서 `articles/101`로 필터링합니다.
+3. 약 1초 뒤 입력 폼이 나타나면 본문을 바꿔보세요.
+4. GET이 반복되고 입력이 서버의 본문으로 돌아오는지 확인하세요.
+5. 취소 버튼으로 팝업을 닫으세요.
+
+김동현의 글은 `101`, `102`이고, 다른 직원의 글은 `103`입니다.
+기존 `backend/articles.json`이 있으면 seed 변경이 자동 반영되지 않으므로,
+`102`의 `authorId`와 `authorName`만 `employee-001`, `김동현`으로 맞추면 됩니다.
+이번 작업에서는 현재 로컬 데이터에도 이 두 필드만 반영했습니다.
+
+상세 GET에만 기본 1초 지연을 적용했습니다. 백엔드 실행 전에
+PowerShell에서 `$env:READ_DELAY_MS = "1000"`으로 조절할 수 있습니다(0~30000ms).
+목록 조회에는 지연을 넣지 않았습니다.
+
+실습 대상은 `PopupEditor.tsx`의 조회 Effect와 `QuickEditForm.tsx`의 입력 초기화 Effect입니다.
+재시도, 조회 요청 정리, 입력 보호는 아직 구현하지 않았습니다.
+ESLint가 이 Effect들에 경고나 오류를 보고하는 것은 실습 대상이며, 규칙을 끄지 않았습니다.
+
+`npx playwright test tests/week2-starter.spec.ts`는 **버그가 재현되는 시작 상태**를 확인합니다.
+리팩터링 후에는 이 테스트를 입력 유지와 불필요한 재조회 방지를 검증하도록 바꾸세요.
+기존 저장 테스트는 계속 사용하며, 반복 조회 때문에 실패하는 입력 유지 검증도 실습 중 확인하세요.
 
 | 메서드 | 주소 | 응답 |
 | --- | --- | --- |

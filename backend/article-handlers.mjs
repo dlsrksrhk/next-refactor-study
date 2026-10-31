@@ -3,6 +3,10 @@ import { readJsonBody, sendJson } from "./http.mjs";
 
 const saveDelay = Number(process.env.SAVE_DELAY_MS ?? 0);
 const saveStatus = Number(process.env.SAVE_STATUS ?? 204);
+const readDelay = Number(process.env.READ_DELAY_MS ?? 1000);
+if (!Number.isFinite(readDelay) || readDelay < 0 || readDelay > 30_000) {
+  throw new Error("READ_DELAY_MS는 0~30000으로 설정하세요.");
+}
 if (
   !Number.isFinite(saveDelay) ||
   saveDelay < 0 ||
@@ -18,7 +22,10 @@ export function handleGetArticles(request, response) {
   return sendJson(response, 200, findAllArticles());
 }
 
-export function handleGetArticle(request, response, article) {
+export async function handleGetArticle(request, response, article) {
+  if (readDelay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, readDelay));
+  }
   return sendJson(response, 200, article);
 }
 
