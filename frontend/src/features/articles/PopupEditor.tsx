@@ -6,7 +6,10 @@ import { useSaveArticle } from "./useSaveArticle";
 import { toast, Toaster } from "sonner";
 
 function showDialog(dialog: HTMLDialogElement | null) {
-  if (dialog && !dialog.open) dialog.showModal();
+  if (dialog && !dialog.open) {
+    dialog.showModal();
+    dialog.querySelector<HTMLInputElement>("#quick-title")?.focus();
+  }
 }
 
 type Props = { article: Article; onClose: () => void; onSaved: () => void };
