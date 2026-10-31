@@ -12,7 +12,7 @@ export function QuickEditButton({ article }: { article: Article }) {
   return (
     <>
       <button
-        className="secondary compact"
+        className="secondary compact quick-edit-trigger"
         onClick={() => setIsOpen(true)}
       >
         빠른 수정

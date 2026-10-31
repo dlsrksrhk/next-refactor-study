@@ -225,6 +225,9 @@ dialog::backdrop {
   outline: 3px solid #78ac96;
   outline-offset: 3px;
 }
+.quick-edit-trigger:focus-visible {
+  outline: none;
+}
 @media (max-width: 720px) {
   .workspace {
     grid-template-columns: 1fr;
