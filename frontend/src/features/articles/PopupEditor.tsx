@@ -18,14 +18,26 @@ export function PopupEditor({ articleId, onClose, onSaved }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getArticle(articleId)
+    const controller = new AbortController();
+
+    getArticle(articleId, controller.signal)
       .then((data) => {
+        if (controller.signal.aborted) {
+          return;
+        }
         setArticle(data);
         setError("");
       })
       .catch(() => {
+        if (controller.signal.aborted) {
+          return;
+        }
         setError("게시글을 불러오지 못했습니다.");
       });
+
+    return () => {
+      controller.abort();
+    };
   }, [articleId]);
 
   return (
