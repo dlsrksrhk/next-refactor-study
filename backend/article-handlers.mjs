@@ -3,10 +3,8 @@ import { readJsonBody, sendJson } from "./http.mjs";
 
 const saveDelay = Number(process.env.SAVE_DELAY_MS ?? 0);
 const saveStatus = Number(process.env.SAVE_STATUS ?? 204);
-const readDelay = Number(process.env.READ_DELAY_MS ?? 1000);
-if (!Number.isFinite(readDelay) || readDelay < 0 || readDelay > 30_000) {
-  throw new Error("READ_DELAY_MS는 0~30000으로 설정하세요.");
-}
+const listReadSettings = getReadSettings("READ_LIST", 0);
+const detailReadSettings = getReadSettings("READ_DETAIL", 1000);
 if (
   !Number.isFinite(saveDelay) ||
   saveDelay < 0 ||
@@ -18,15 +16,37 @@ if (
   );
 }
 
-export function handleGetArticles(request, response) {
+export async function handleGetArticles(request, response) {
+  if (!(await applyMockReadSettings(response, listReadSettings))) return;
   return sendJson(response, 200, findAllArticles());
 }
 
 export async function handleGetArticle(request, response, article) {
-  if (readDelay > 0) {
-    await new Promise((resolve) => setTimeout(resolve, readDelay));
-  }
+  if (!(await applyMockReadSettings(response, detailReadSettings))) return;
   return sendJson(response, 200, article);
+}
+
+function getReadSettings(prefix, defaultDelay) {
+  const delay = Number(process.env[`${prefix}_DELAY_MS`] ?? defaultDelay);
+  const status = Number(process.env[`${prefix}_STATUS`] ?? 200);
+  if (!Number.isFinite(delay) || delay < 0 || delay > 30_000) {
+    throw new Error(`${prefix}_DELAY_MS는 0~30000으로 설정하세요.`);
+  }
+  if (![200, 500].includes(status)) {
+    throw new Error(`${prefix}_STATUS는 200 또는 500으로 설정하세요.`);
+  }
+  return { delay, status };
+}
+
+async function applyMockReadSettings(response, { delay, status }) {
+  if (delay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+  if (status === 500) {
+    sendJson(response, 500, { message: "게시글을 불러오지 못했습니다." });
+    return false;
+  }
+  return true;
 }
 
 export async function handleUpdateArticle(request, response, article) {
