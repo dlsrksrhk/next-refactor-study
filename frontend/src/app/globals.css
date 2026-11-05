@@ -85,6 +85,31 @@ main {
   border-radius: 8px;
   margin-top: 28px;
 }
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+  margin-top: 28px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #dce2ea;
+  border-radius: 8px;
+}
+.board-search {
+  flex: 1 1 260px;
+}
+.board-search label {
+  margin-top: 0;
+}
+.board-controls .board-own-filter {
+  margin: 0 0 10px;
+}
+.board-empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: #667085;
+}
 table {
   width: 100%;
   border-collapse: collapse;
