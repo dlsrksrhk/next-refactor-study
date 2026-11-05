@@ -11,6 +11,10 @@ export default defineConfig({
       reuseExistingServer: false,
       env: {
         PORT: "4100",
+        READ_LIST_STATUS: "200",
+        READ_LIST_DELAY_MS: "0",
+        READ_DETAIL_STATUS: "200",
+        READ_DETAIL_DELAY_MS: "1000",
         SAVE_DELAY_MS: "0",
         SAVE_STATUS: "204",
         ARTICLE_STORE_FILE: ".data-test/articles.json",

@@ -11,7 +11,7 @@ async function withBackend(settings, run) {
   const directory = await mkdtemp(join(tmpdir(), "article-backend-test-"));
   const storageFile = settings.ARTICLE_STORE_FILE ?? join(directory, "articles.json");
   const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], {
-    env: { ...process.env, PORT: "0", READ_DELAY_MS: "0", SAVE_DELAY_MS: "0", SAVE_STATUS: "204", ARTICLE_STORE_FILE: storageFile, ...settings },
+    env: { ...process.env, PORT: "0", READ_LIST_DELAY_MS: "0", READ_LIST_STATUS: "200", READ_DETAIL_DELAY_MS: "0", READ_DETAIL_STATUS: "200", SAVE_DELAY_MS: "0", SAVE_STATUS: "204", ARTICLE_STORE_FILE: storageFile, ...settings },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -36,6 +36,44 @@ async function withBackend(settings, run) {
     await rm(directory, { recursive: true, force: true });
   }
 }
+
+test("상세 조회 실패 설정은 지연 후 500을 반환하고 목록과 저장에는 영향을 주지 않는다", { timeout: 10_000 }, async () => {
+  await withBackend({ READ_DETAIL_DELAY_MS: "150", READ_DETAIL_STATUS: "500" }, async (baseUrl) => {
+    const list = await fetch(`${baseUrl}/api/articles`);
+    assert.equal(list.status, 200);
+    assert.ok((await list.json()).some((article) => article.id === "101"));
+
+    const startedAt = performance.now();
+    const response = await fetch(`${baseUrl}/api/articles/101`);
+    assert.equal(response.status, 500);
+    assert.ok(performance.now() - startedAt >= 140, "조회 지연 설정이 적용되어야 합니다.");
+    assert.deepEqual(await response.json(), { message: "게시글을 불러오지 못했습니다." });
+    assert.equal((await fetch(`${baseUrl}/api/articles/missing`)).status, 404);
+
+    const draft = { title: "조회 실패 중 저장", body: "저장 기능은 유지합니다." };
+    const saved = await fetch(`${baseUrl}/api/articles/101`, {
+      method: "PUT",
+      body: JSON.stringify(draft),
+    });
+    assert.equal(saved.status, 204);
+    const articles = await (await fetch(`${baseUrl}/api/articles`)).json();
+    assert.equal(articles.find((article) => article.id === "101").title, draft.title);
+  });
+});
+
+test("목록 조회 실패 설정은 지연 후 500을 반환하고 상세 조회에는 영향을 주지 않는다", { timeout: 10_000 }, async () => {
+  await withBackend({ READ_LIST_DELAY_MS: "150", READ_LIST_STATUS: "500" }, async (baseUrl) => {
+    const detail = await fetch(`${baseUrl}/api/articles/101`);
+    assert.equal(detail.status, 200);
+    assert.equal((await detail.json()).id, "101");
+
+    const startedAt = performance.now();
+    const list = await fetch(`${baseUrl}/api/articles`);
+    assert.equal(list.status, 500);
+    assert.ok(performance.now() - startedAt >= 140, "목록 조회 지연 설정이 적용되어야 합니다.");
+    assert.deepEqual(await list.json(), { message: "게시글을 불러오지 못했습니다." });
+  });
+});
 
 test("지연된 500 저장 응답은 게시글을 변경하지 않는다", { timeout: 10_000 }, async () => {
   await withBackend({ SAVE_DELAY_MS: "150", SAVE_STATUS: "500" }, async (baseUrl) => {

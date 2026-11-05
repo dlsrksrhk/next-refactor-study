@@ -16,6 +16,7 @@ type Props = { articleId: string; onClose: () => void; onSaved: () => void };
 export function PopupEditor({ articleId, onClose, onSaved }: Props) {
   const [article, setArticle] = useState<Article | null>(null);
   const [error, setError] = useState("");
+  const [retryFlag, setRetryFlag] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -38,7 +39,7 @@ export function PopupEditor({ articleId, onClose, onSaved }: Props) {
     return () => {
       controller.abort();
     };
-  }, [articleId]);
+  }, [articleId, retryFlag]);
 
   return (
     <dialog
@@ -50,7 +51,24 @@ export function PopupEditor({ articleId, onClose, onSaved }: Props) {
       {error ? (
         <div>
           <p role="alert">{error}</p>
-          <button onClick={onClose}>닫기</button>
+          <div className="actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={onClose}
+            >
+              닫기
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRetryFlag((prev) => !prev);
+                setError("");
+              }}
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
       ) : !article ? (
         <div>
