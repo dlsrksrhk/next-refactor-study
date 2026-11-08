@@ -12,26 +12,20 @@ type Props = { articles: Article[]; user: User };
 export function BoardList({ articles, user }: Props) {
   const [query, setQuery] = useState("");
   const [onlyMine, setOnlyMine] = useState(false);
-  const [filteredArticles, setFilteredArticles] = useState(articles);
-  const [resultCount, setResultCount] = useState(articles.length);
 
   function handleQueryChange(event: ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
     setQuery(value);
-    const results = articles.filter((article) =>
-      article.title.toLowerCase().includes(value.trim().toLowerCase()),
-    );
-    setFilteredArticles(results);
-    setResultCount(results.length);
   }
 
   function handleOnlyMineChange(event: ChangeEvent<HTMLInputElement>) {
     const checked = event.target.checked;
     setOnlyMine(checked);
-    setFilteredArticles(
-      checked ? filteredArticles.filter((article) => article.authorId === user.id) : articles,
-    );
   }
+
+  const filteredArticles = articles
+    .filter((article) => (onlyMine ? article.authorId === user.id : true))
+    .filter((article) => article.title.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
     <>
@@ -57,7 +51,7 @@ export function BoardList({ articles, user }: Props) {
       </div>
       <div className="table-container">
         <table>
-          <caption>검색 결과 {resultCount}건</caption>
+          <caption>검색 결과 {filteredArticles.length}건</caption>
           <thead>
             <tr>
               <th scope="col">제목</th>
