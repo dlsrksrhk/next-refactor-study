@@ -6,6 +6,7 @@ import type { Article } from "./article";
 import { useSaveArticle } from "./useSaveArticle";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ArticleFields } from "@/features/articles/ArticleFields";
 
 export function ArticleEditor({ article }: { article: Article }) {
   const router = useRouter();
@@ -45,18 +46,14 @@ export function ArticleEditor({ article }: { article: Article }) {
     >
       <fieldset disabled={editor.isSaving}>
         <legend>게시글 내용</legend>
-        <label htmlFor="title">제목</label>
-        <input
-          id="title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <label htmlFor="body">본문</label>
-        <textarea
-          id="body"
-          rows={10}
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
+        <ArticleFields
+          title={title}
+          body={body}
+          onChangeTitle={setTitle}
+          onChangeBody={setBody}
+          titleElId={"title"}
+          bodyElId={"body"}
+          bodyRows={10}
         />
         <label className="checkbox-label">
           <input
