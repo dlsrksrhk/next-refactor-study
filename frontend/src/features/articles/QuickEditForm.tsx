@@ -4,6 +4,7 @@ import { FormEvent, useRef, useEffect, useState } from "react";
 import type { Article } from "./article";
 import { useSaveArticle } from "./useSaveArticle";
 import { toast, Toaster } from "sonner";
+import { ArticleFields } from "@/features/articles/ArticleFields";
 
 function focusTitle(input: HTMLInputElement | null) {
   input?.focus();
@@ -65,19 +66,15 @@ export function QuickEditForm({ article, onClose, onSaved }: Props) {
       />
       <fieldset disabled={editor.isSaving}>
         <legend className="visually-hidden">게시글 내용</legend>
-        <label htmlFor="quick-title">제목</label>
-        <input
-          id="quick-title"
-          ref={focusTitle}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-        <label htmlFor="quick-body">본문</label>
-        <textarea
-          id="quick-body"
-          rows={6}
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
+        <ArticleFields
+          title={title}
+          body={body}
+          onChangeTitle={setTitle}
+          onChangeBody={setBody}
+          titleElId={"quick-title"}
+          bodyElId={"quick-body"}
+          bodyRows={6}
+          focusTitle={focusTitle}
         />
         <div className="actions">
           <button

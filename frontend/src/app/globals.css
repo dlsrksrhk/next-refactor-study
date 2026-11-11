@@ -177,6 +177,13 @@ textarea {
 textarea {
   resize: vertical;
 }
+.article-body-count {
+  margin: 6px 0 0;
+  color: #667085;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 .checkbox-label {
   display: flex;
   gap: 8px;
